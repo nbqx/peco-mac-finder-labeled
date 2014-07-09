@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"bufio"
 	"strings"
+	"sync"
 )
 
 var labelColors = map[string] string {
@@ -53,6 +54,8 @@ func main() {
 	}
 	labeled := labelColors[strings.ToLower(os.Args[1])]
 
+	var wg sync.WaitGroup
+
 	// input from STDIN
 	buf := bufio.NewReader(os.Stdin)
 	for {
@@ -60,11 +63,16 @@ func main() {
 		if err != nil {
 			break
 		}
-		line := string(b)
-		color := getkMDItemFSLabel(line)
-
-		if labeled == color {
-			fmt.Println(line)
-		}
+		
+		wg.Add(1)
+		go func(line string){
+			defer wg.Done()
+			color := getkMDItemFSLabel(line)
+			if labeled == color {
+				fmt.Println(line)
+			}
+		}(string(b))
 	}
+	wg.Wait()
+	
 }
